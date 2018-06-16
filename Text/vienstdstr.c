@@ -2,6 +2,25 @@
 #include <string.h>
 #include <ctype.h>
 
+char* lowerstr(char* string) {
+  char* dupstr = strdup(string);
+  char* w = string;
+
+  while((*w++ = tolower(*dupstr++)) != '\0');
+
+  return string;
+}
+
+char* shiftstr(char* string, int size, int n) {
+  if (n < 0 || n >= size)
+    return string;
+  
+  while (n-- > 0)
+    ++string;
+
+  return string;
+}
+
 char* strtrm(char* string) {
   char* copy = strdup(string);
   char* dup  = strdup(string);
@@ -20,6 +39,7 @@ char* strtrm(char* string) {
   while(isspace(copy[i]) || copy[i] == '\0')
     --i;
 
+  i++;
   copy[i] = '\0';
 
   return &copy[0];
@@ -37,20 +57,4 @@ char* reverse(char* string) {
   }
 
   return copy;
-}
-    
-int main(int argc, char *argv[]) {
-  char string[64];
-  char *stringp = string;
-  
-  if(argc > 1) {
-    while(argc-- > 1) {
-      printf("%s reversed is %s\n", argv[argc], reverse(argv[argc]));
-    }
-  } else {
-    while (fgets(stringp, 64, stdin) != NULL)
-      printf("%s reversed is %s\n", strtrm(stringp), reverse(strtrm(stringp)));
-  }
-
-  return 0;
 }
