@@ -5,6 +5,8 @@
 #include <string.h>
 #include <ctype.h>
 
+int isEven(int n);
+int isOdd(int n);
 char* lowerstr(char* string);
 char* strtrm(char* string);
 char* reverse(char* string);

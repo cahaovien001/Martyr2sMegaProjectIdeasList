@@ -2,6 +2,14 @@
 #include <string.h>
 #include <ctype.h>
 
+int isEven(int n) {
+  return n % 2 == 0;
+}
+
+int isOdd(int n) {
+  return n % 2 != 0;
+}
+
 char* lowerstr(char* string) {
   char* dupstr = strdup(string);
   char* w = string;
