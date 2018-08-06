@@ -1,1 +1,1 @@
-Hello Kitty! Hello World!
+:) :) :(

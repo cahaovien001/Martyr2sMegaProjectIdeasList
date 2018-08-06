@@ -2,6 +2,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.text.*;
+import javax.swing.event.*;
 import java.util.*;
 import java.io.*;
 
@@ -11,6 +12,8 @@ public class Notepad {
     static JTextPane editorPane;
     static HashSet<String> reservedWords;
     static JTextField filenameField;
+    static JTextField workingPath;
+    static int keyCTRLCount;
     
     public static void createNotepadMainWindow() {
 	Toolkit tk = Toolkit.getDefaultToolkit();
@@ -32,16 +35,211 @@ public class Notepad {
 	    return width/2;
 	return width;
     }
+    
+    public static JPanel createSaveFilenameTextField() {
+	JPanel sfPanel = new JPanel();
+	BoxLayout saveFilenameConsoleBoxLayout =
+	    new BoxLayout(sfPanel, BoxLayout.Y_AXIS);
+	sfPanel.setLayout(saveFilenameConsoleBoxLayout);
+	
+	Toolkit tk = Toolkit.getDefaultToolkit();
+	Dimension fullscreen = tk.getScreenSize();
+	int thisWidth = normalWidth((int)fullscreen.getWidth()) -
+	    (int) Math.floor(normalWidth(
+	    (int)fullscreen.getWidth())*0.618);
+	JTextArea saveFilenameConsole = new JTextArea();
+	saveFilenameConsole.setEditable(false);
+	    saveFilenameConsole.setPreferredSize(
+	    new Dimension(thisWidth-21,
+			  (int)((double)thisWidth*0.618) - 21));
+	saveFilenameConsole.setFont(new Font("Lucida Console",
+					     Font.PLAIN, 13));
+	saveFilenameConsole.setForeground(new Color(236, 237, 233));
+	saveFilenameConsole.setBackground(new Color(0, 0, 0));
+	saveFilenameConsole.setText("Console >>>\n" +
+				    "Welcome to Hao's Notepad!\n" +
+				    "Type 'save yourfilename.ext' to save\n" +
+				    "Type 'open yourfilename.ext' to open\n" +
+				    "Double-Tap CTRL to switch between CONSOLE"
+				    + " and Main Editor\n\n" +
+				    "Enjoy!\n\n>>>\n");
+	sfPanel.add(saveFilenameConsole);
 
-    public static JTextField createSaveFilenameTextField() {
-	final int COLUMNS = 55;
+	workingPath = new JTextField();
+	workingPath.setPreferredSize(
+	   new Dimension(thisWidth-21,
+			 (int)((double)21.)));
+	workingPath.setFont(new Font("Lucida Console", Font.PLAIN, 13));
+	workingPath.setForeground(new Color(46, 52, 54));
+	workingPath.setBackground(new Color(188, 188, 188));
+	// thanks to Qazi and BalusC @ stackoverflow.com::java
+	// for the PWD function in Java
+	try {
+	    String pwd = new java.io.File(".").getCanonicalPath();
+	    workingPath.setText(pwd);
+	} catch(Exception e) {
+	    System.err.println(":(");
+	}
+	sfPanel.add(workingPath);
+	
+	filenameField = new JTextField();
+	filenameField.setPreferredSize(
+	   new Dimension(thisWidth-21,
+			 (int)((double)21.)));
+	filenameField.setFont(new Font("Lucida Console", Font.PLAIN, 13));
+	filenameField.setForeground(new Color(211, 211, 210));
+	filenameField.setBackground(new Color(35, 39, 41));
+	filenameField.setText("save NameMeSomething.java");
+	filenameField.addKeyListener(new KeyListener() {
+		public void keyPressed(KeyEvent e) {
+		    if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+			keyCTRLCount++;
+			//System.out.println(keyCTRLCount);
+			if (keyCTRLCount >= 2) {
+			    editorPane.requestFocusInWindow();
+			    keyCTRLCount = 0;
+			}
+		    }
+		}
 
-	filenameField = new JTextField(COLUMNS);
-	filenameField.setFont(new Font("Courier", Font.PLAIN, 21));
-	filenameField.setForeground(new Color(200, 197, 192));
-	filenameField.setBackground(new Color(44, 40, 39));
-	filenameField.setText("NameMeSomething.java");
-	return filenameField;
+		public void keyReleased(KeyEvent e) {
+		    ;
+		}
+
+		public void keyTyped(KeyEvent e) {;};
+	    });
+	filenameField.addActionListener(new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+		    updatePreviewTextArea();
+		    java.util.Scanner scanCommand =
+			new java.util.Scanner(e.getActionCommand());
+		    scanCommand.useDelimiter(" ");
+
+		    String scanned = scanCommand.next();
+		    if (scanned.equals("save")) {
+			//debug: System.out.println("Saving...");
+			
+			String filename = scanCommand.next();
+			File file = null;
+			FileOutputStream fos = null;
+			PrintWriter pw = null;
+			try {
+			    String pwd = workingPath.getText();
+			    //System.out.println(pwd);
+			    if (pwd.charAt(pwd.length()-1) == '/')
+				pwd = pwd.substring(0, pwd.length()-1);
+			    //System.out.println(pwd);
+			    file = new File(pwd + "/" + filename);
+			    fos = new FileOutputStream(file);
+			    pw = new PrintWriter(fos);
+			    pw.print(editorPane.getText());
+			    pw.println();
+			    pw.flush();
+			} catch(Exception except) {
+			System.err.println(":(");
+			} finally {
+			    try {
+				pw.close();
+			    fos.close();
+			    } catch(Exception err) {
+				System.err.println(":(");
+			    }
+			}			
+			saveFilenameConsole.setText(
+			   saveFilenameConsole.getText() +
+			   '\n' +
+			   filenameField.getText());
+			String consoleText = filenameField.getText();
+		    } else if (scanned.equals("open")) {
+			String filename = scanCommand.next();
+			File file = null;
+			FileReader fr = null;
+			    try {
+				String pwd = workingPath.getText();
+				//System.out.println(pwd);
+				if (pwd.charAt(pwd.length()-1) == '/')
+				    pwd = pwd.substring(0, pwd.length()-1);
+				//System.out.println(pwd);
+				file = new File(pwd + "/" + filename);
+				fr = new FileReader(file);
+				StringBuilder sb = new StringBuilder();
+				while(fr.ready()) {
+				    sb.append((char)fr.read());
+				}
+				
+				editorPane.setText(sb.toString());
+				previewPane.setText(sb.toString());
+			    } catch(Exception except) {
+				System.err.println(":(");
+			    } finally {
+				try {
+				    fr.close();
+				} catch (Exception ex) {
+				    System.err.println(":(");
+				}
+			    }
+			saveFilenameConsole.setText(
+			   saveFilenameConsole.getText() +
+			   '\n' +
+			   filenameField.getText());
+			String consoleText = filenameField.getText();
+		    } else if (scanned.equals("exit") ||
+			       scanned.equals("quit") ||
+			       scanned.equals("leave")) {
+			String filetrace = "Notepad.history";
+			String pwd = workingPath.getText();
+			//System.out.println(pwd);
+			if (pwd.charAt(pwd.length()-1) == '/')
+			    pwd = pwd.substring(0, pwd.length()-1);
+			//System.out.println(pwd);
+			File f = new File(pwd + "/" +
+					  filetrace);
+			StringBuilder sb = null;
+			
+			try {
+			    FileReader fr = new FileReader(f);
+			   sb = new StringBuilder();
+			    
+			    while(fr.ready()) {
+				sb.append((char)fr.read());
+			    }
+
+			    try {
+				fr.close();
+			    } catch(Exception err) {
+				System.err.println(":(");
+			    }
+			} catch (Exception error) {
+			    System.err.println(":(");
+			}
+			  			    
+			PrintWriter tracepw = null;
+			try { 
+			    tracepw = new PrintWriter(f);
+			    if (sb != null)
+				tracepw.append(sb.toString());
+			    tracepw.append(saveFilenameConsole.getText());
+			    tracepw.append('\n');
+			    tracepw.flush();
+			} catch (Exception err) {
+			    System.err.println(":(");
+			}
+			    
+			try {
+			    tracepw.close();
+			} catch (Exception err) {
+			    System.err.println(":(");
+			}
+			frame.dispatchEvent(
+			       new WindowEvent(frame,
+					       WindowEvent.WINDOW_CLOSING));
+		    }
+		    
+		}
+	    });
+	sfPanel.add(filenameField);
+	
+	return sfPanel;
     }
 	
     public static JPanel createRightPanel() {
@@ -51,8 +249,7 @@ public class Notepad {
 	previewPane = createPreviewTextArea();
 	JScrollPane rightPanel =
 	    new JScrollPane(previewPane);
-	JScrollPane placeHolderPanel =
-	    new JScrollPane(createSaveFilenameTextField());
+	JScrollPane placeHolderPanel = new JScrollPane(createSaveFilenameTextField());
 	Toolkit tk = Toolkit.getDefaultToolkit();
 	Dimension fullscreen = tk.getScreenSize();
 	int thisWidth = normalWidth((int)fullscreen.getWidth()) -
@@ -68,14 +265,33 @@ public class Notepad {
     
     public static JScrollPane createLeftPanel() {
 	editorPane = createMainTextField();
+	editorPane.addKeyListener(new KeyListener() {
+		public void keyPressed(KeyEvent e) {
+		    if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+			keyCTRLCount++;
+			//System.out.println(keyCTRLCount);
+			if (keyCTRLCount >= 2) {
+			    filenameField.requestFocusInWindow();
+			    keyCTRLCount = 0;
+			}
+		    }
+		}
+		
+		public void keyReleased(KeyEvent e) {
+		    ;
+		}
+		
+		public void keyTyped(KeyEvent e) {;};
+	    });
 	JScrollPane leftPanel = new JScrollPane(editorPane);
 	Toolkit tk = Toolkit.getDefaultToolkit();
 	Dimension fullscreen = tk.getScreenSize();
+	keyCTRLCount = 0;
 	leftPanel.setPreferredSize(
 	               new Dimension((int) Math.floor(
 	           0.618*normalWidth((int) fullscreen.getWidth())),
 		     	             (int) fullscreen.getHeight()));
-
+       
 	return leftPanel;
     }
 
@@ -85,8 +301,8 @@ public class Notepad {
 	JTextArea textField = new JTextArea();
 	textField.setEditable(false);
 	textField.setFont(new Font("Courier", Font.PLAIN, 21));
-	textField.setForeground(new Color(200, 197, 192));
-	textField.setBackground(new Color(44, 40, 39));
+	textField.setForeground(new Color(211, 211, 210));
+	textField.setBackground(new Color(35, 39, 41));
 	
 	return textField;
     }
@@ -97,10 +313,10 @@ public class Notepad {
 	JTextPane textField = new JTextPane();
 	textField.setFont(new Font("Courier", Font.PLAIN, 34));
 	// Colors from In Color Balance From Pinterest
-	textField.setForeground(new Color(200, 197, 192));
-	textField.setBackground(new Color(44, 40, 39));
-	textField.setCaretColor(new Color(200, 197, 192));
-	
+	textField.setForeground(new Color(211, 211, 210));
+	textField.setBackground(new Color(35, 39, 41));
+	textField.setCaretColor(new Color(211, 211, 210));
+						      
 	return textField;
     }
     
@@ -131,7 +347,11 @@ public class Notepad {
 		    FileOutputStream fos = null;
 		    PrintWriter pw = null;
 		    try {
-			file = new File(filename);
+			String pwd = workingPath.getText();
+			if(pwd.charAt(pwd.length()-1) == '/')
+			    pwd = pwd.substring(0, pwd.length()-1);
+			file = new File(pwd + "/" +
+					filename);
 			fos = new FileOutputStream(file);
 			pw = new PrintWriter(fos);
 			pw.print(editorPane.getText());

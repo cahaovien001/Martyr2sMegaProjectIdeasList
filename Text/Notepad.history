@@ -1,0 +1,61 @@
+
+open NameMeSomething.java
+save NameMeSomething.java
+open clang_reserved.txt
+save clang_reserved.txt
+Console >>>
+
+open NameMeSomething.java
+save NameMeSomething.java
+open clang_reserved.txt
+open NameMeSomething.java
+Console >>>
+
+save CheckThisOut.txt
+save CheckThisOut.txt
+open clang_reserved.txt
+save clang_reserved.txt
+open CheckThisOut.txt
+save CheckThisOut.txt
+Console >>>
+
+save MrBurns.txt
+open CheckThisOut.txt
+open MrBurns.txt
+Console >>>
+Welcome to Hao's Notepad!
+Type 'save yourfilename.ext' to save
+Type 'open yourfilename.ext' to open
+Double-Tap CTRL to switch between CONSOLE and Main Editor
+
+Enjoy!
+
+>>>
+
+save Hola.txt
+open clang_reserved.txt
+open Hola.txt
+Console >>>
+Welcome to Hao's Notepad!
+Type 'save yourfilename.ext' to save
+Type 'open yourfilename.ext' to open
+Double-Tap CTRL to switch between CONSOLE and Main Editor
+
+Enjoy!
+
+>>>
+
+save NameMeSomething.java
+save NameMeSomething.java
+save NameMeSomething.java
+Console >>>
+Welcome to Hao's Notepad!
+Type 'save yourfilename.ext' to save
+Type 'open yourfilename.ext' to open
+Double-Tap CTRL to switch between CONSOLE and Main Editor
+
+Enjoy!
+
+>>>
+
+save JustSomeHello.txt
